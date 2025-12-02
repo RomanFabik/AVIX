@@ -18,6 +18,19 @@ FONT_URL = "https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
 
 st.set_page_config(page_title="AVIX AI Translation", page_icon=":earth_africa:", layout="wide")
 
+HIDE_TOOLBAR = """
+    <style>
+    /* skryje horný toolbar so GitHub ikonou, pozastavením, atď. */
+    [data-testid="stToolbar"] {
+        visibility: hidden;
+        height: 0;
+        position: fixed;
+    }
+    </style>
+"""
+st.markdown(HIDE_TOOLBAR, unsafe_allow_html=True)
+
+
 # === TRANSLATIONS ===
 translations = {
     "sk": {
@@ -264,6 +277,7 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
 
