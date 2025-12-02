@@ -228,21 +228,7 @@ if uploaded_file:
 
                 with st.expander(t["preview_result"], expanded=True):
                     st.dataframe(translation_df_copy.head())
-
-                # === AUTOMATIC TRANSLATION NOTICE ===
-
-                notice_texts = {
-                    "sk": "Tento preklad je generovaný automaticky. Môže obsahovať nepresnosti, preto odporúčame jeho kontrolu pred finálnym použitím.",
-                    "en": "This translation is generated automatically. It may contain inaccuracies, so we recommend reviewing it before final use.",
-                    "de": "Diese Übersetzung wird automatisch erstellt. Sie kann Ungenauigkeiten enthalten, daher empfehlen wir, sie vor der endgültigen Verwendung zu überprüfen."
-                }
-
-                selected_lang = language  # tvoje aktuálne jazykové nastavenie (sk/en/de)
-
-                st.info(notice_texts.get(selected_lang, notice_texts["en"]))
-
-
-                
+               
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                     translation_df_copy.to_excel(writer, sheet_name='Translations', index=False)
@@ -254,6 +240,19 @@ if uploaded_file:
 
                 from openpyxl.styles import Font
 
+        # === AUTOMATIC TRANSLATION NOTICE ===
+
+                notice_texts = {
+                    "sk": "Tento preklad je generovaný automaticky. Môže obsahovať nepresnosti, preto odporúčame jeho kontrolu pred finálnym použitím.",
+                    "en": "This translation is generated automatically. It may contain inaccuracies, so we recommend reviewing it before final use.",
+                    "de": "Diese Übersetzung wird automatisch erstellt. Sie kann Ungenauigkeiten enthalten, daher empfehlen wir, sie vor der endgültigen Verwendung zu überprüfen."
+                }
+
+                selected_lang = language  # tvoje aktuálne jazykové nastavenie (sk/en/de)
+
+                st.info(notice_texts.get(selected_lang, notice_texts["en"]))
+
+                
                 # Nastav Arial 10 pre všetky bunky v preklade
                 default_font = Font(name="Arial", size=10)
 
@@ -291,6 +290,7 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
 
