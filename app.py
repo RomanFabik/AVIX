@@ -66,26 +66,12 @@ def show_pdf_manual():
     with open(PDF_PATH, "rb") as f:
         pdf_bytes = f.read()
 
-    # Tlačidlo na stiahnutie
     st.download_button(
-        label="📥 Stiahnuť PDF manuál",
+        label="📘 Otvoriť / stiahnuť PDF manuál",
         data=pdf_bytes,
         file_name=PDF_PATH.name,
         mime="application/pdf",
     )
-
-    # Zobrazenie PDF inline (iframe)
-    base64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
-    pdf_display = f"""
-    <iframe
-        src="data:application/pdf;base64,{base64_pdf}"
-        width="100%"
-        height="800"
-        type="application/pdf"
-    ></iframe>
-    """
-    st.markdown(pdf_display, unsafe_allow_html=True)
-
 
 
 # === STYLES ===
@@ -115,8 +101,8 @@ logo_base64 = load_logo_base64("avix_logo.png")
 
 # ... po výbere jazyka a textov t = translations[lang_choice]
 
-with st.expander("📘 PDF manuál", expanded=False):
-    show_pdf_manual()
+show_pdf_manual()
+
 
 
 # === HEADER & LANGUAGE ===
@@ -278,4 +264,5 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
