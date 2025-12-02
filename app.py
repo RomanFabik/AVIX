@@ -240,29 +240,6 @@ if uploaded_file:
 
                 from openpyxl.styles import Font
 
-            # === AUTOMATIC TRANSLATION NOTICE ===
-            notice_texts = {
-                "sk": (
-                    "Tento preklad je generovaný automaticky. Môže obsahovať nepresnosti, "
-                    "preto odporúčame dôkladnú kontrolu pred finálnym nasadením."
-                ),
-                "en": (
-                    "This translation is generated automatically. It may contain inaccuracies, "
-                    "so we recommend carefully reviewing it before final use."
-                ),
-                "de": (
-                    "Diese Übersetzung wird automatisch erstellt. Sie kann Ungenauigkeiten enthalten, "
-                    "daher empfehlen wir eine sorgfältige Prüfung vor dem endgültigen Einsatz."
-                ),
-            }
-
-            # použijeme jazyk, ktorý máš zvolený v prepínači hore (🇸🇰/🇬🇧/🇩🇪)
-            selected_lang = lang_choice
-
-            # zobraz informáciu ako info box
-            st.info(notice_texts.get(selected_lang, notice_texts["en"]))
-
-
                 
                 # Nastav Arial 10 pre všetky bunky v preklade
                 default_font = Font(name="Arial", size=10)
@@ -301,6 +278,7 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
 
