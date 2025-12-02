@@ -56,7 +56,7 @@ translations = {
 }
 
 
-PDF_PATH = Path("Návod.pdf")  # názov súboru prispôsob svojmu
+PDF_PATH = Path("Instructions.pdf")  # názov súboru prispôsob svojmu
 
 def show_pdf_manual():
     if not PDF_PATH.exists():
@@ -264,5 +264,6 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
