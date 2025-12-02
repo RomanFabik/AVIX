@@ -240,17 +240,28 @@ if uploaded_file:
 
                 from openpyxl.styles import Font
 
-        # === AUTOMATIC TRANSLATION NOTICE ===
+            # === AUTOMATIC TRANSLATION NOTICE ===
+            notice_texts = {
+                "sk": (
+                    "Tento preklad je generovaný automaticky. Môže obsahovať nepresnosti, "
+                    "preto odporúčame dôkladnú kontrolu pred finálnym nasadením."
+                ),
+                "en": (
+                    "This translation is generated automatically. It may contain inaccuracies, "
+                    "so we recommend carefully reviewing it before final use."
+                ),
+                "de": (
+                    "Diese Übersetzung wird automatisch erstellt. Sie kann Ungenauigkeiten enthalten, "
+                    "daher empfehlen wir eine sorgfältige Prüfung vor dem endgültigen Einsatz."
+                ),
+            }
 
-                notice_texts = {
-                    "sk": "Tento preklad je generovaný automaticky. Môže obsahovať nepresnosti, preto odporúčame jeho kontrolu pred finálnym použitím.",
-                    "en": "This translation is generated automatically. It may contain inaccuracies, so we recommend reviewing it before final use.",
-                    "de": "Diese Übersetzung wird automatisch erstellt. Sie kann Ungenauigkeiten enthalten, daher empfehlen wir, sie vor der endgültigen Verwendung zu überprüfen."
-                }
+            # použijeme jazyk, ktorý máš zvolený v prepínači hore (🇸🇰/🇬🇧/🇩🇪)
+            selected_lang = lang_choice
 
-                selected_lang = language  # tvoje aktuálne jazykové nastavenie (sk/en/de)
+            # zobraz informáciu ako info box
+            st.info(notice_texts.get(selected_lang, notice_texts["en"]))
 
-                st.info(notice_texts.get(selected_lang, notice_texts["en"]))
 
                 
                 # Nastav Arial 10 pre všetky bunky v preklade
@@ -290,6 +301,7 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
 
