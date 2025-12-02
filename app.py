@@ -67,7 +67,7 @@ def show_pdf_manual():
         pdf_bytes = f.read()
 
     st.download_button(
-        label="📘 Otvoriť / stiahnuť PDF manuál",
+        label="📘 Open instructions",
         data=pdf_bytes,
         file_name=PDF_PATH.name,
         mime="application/pdf",
@@ -264,6 +264,7 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
 
