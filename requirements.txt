@@ -2,4 +2,5 @@ streamlit
 pandas
 openpyxl
 deep-translator
-xlrd==1.2.0
+
+xlrd==2.0.1
