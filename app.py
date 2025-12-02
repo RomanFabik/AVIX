@@ -5,6 +5,7 @@ import time
 import io
 from openpyxl import load_workbook
 from openpyxl.styles import Font
+from pathlib import Path
 import base64
 import re
 
@@ -54,6 +55,39 @@ translations = {
     }
 }
 
+
+PDF_PATH = Path("Návod.pdf")  # názov súboru prispôsob svojmu
+
+def show_pdf_manual():
+    if not PDF_PATH.exists():
+        st.warning("PDF manuál zatiaľ nie je nahratý v repozitári.")
+        return
+
+    with open(PDF_PATH, "rb") as f:
+        pdf_bytes = f.read()
+
+    # Tlačidlo na stiahnutie
+    st.download_button(
+        label="📥 Stiahnuť PDF manuál",
+        data=pdf_bytes,
+        file_name=PDF_PATH.name,
+        mime="application/pdf",
+    )
+
+    # Zobrazenie PDF inline (iframe)
+    base64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+    pdf_display = f"""
+    <iframe
+        src="data:application/pdf;base64,{base64_pdf}"
+        width="100%"
+        height="800"
+        type="application/pdf"
+    ></iframe>
+    """
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
+
+
 # === STYLES ===
 st.markdown(f"""
     <style>
@@ -78,6 +112,12 @@ def load_logo_base64(path):
         return base64.b64encode(image_file.read()).decode()
 
 logo_base64 = load_logo_base64("avix_logo.png")
+
+# ... po výbere jazyka a textov t = translations[lang_choice]
+
+with st.expander("📘 PDF manuál", expanded=False):
+    show_pdf_manual()
+
 
 # === HEADER & LANGUAGE ===
 col_header, col_lang = st.columns([5, 1])
@@ -238,3 +278,4 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
