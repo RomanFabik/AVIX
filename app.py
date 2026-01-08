@@ -141,7 +141,11 @@ col1, col2 = st.columns([1, 4])
 with col1:
     st.write(t["upload_file"])
 with col2:
-    uploaded_file = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader(
+        "Upload Excel file",   # alebo po slovensky: "Nahrať Excel súbor"
+        type=["xlsx", "xls"],
+        label_visibility="collapsed"
+    )
 
 # === PROCESSING ===
 if uploaded_file:
@@ -298,6 +302,7 @@ if uploaded_file:
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
+
 
 
 
