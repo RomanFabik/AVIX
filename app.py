@@ -17,19 +17,6 @@ FONT_URL = "https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
 
 st.set_page_config(page_title="AVIX AI Translation", page_icon=":earth_africa:", layout="wide")
 
-HIDE_TOOLBAR = """
-    <style>
-    /* skryje horný toolbar so GitHub ikonou, pozastavením, atď. */
-    [data-testid="stToolbar"] {
-        visibility: hidden;
-        height: 0;
-        position: fixed;
-    }
-    </style>
-"""
-st.markdown(HIDE_TOOLBAR, unsafe_allow_html=True)
-
-
 # === TRANSLATIONS ===
 translations = {
     "sk": {
@@ -85,7 +72,6 @@ def show_pdf_manual():
         mime="application/pdf",
     )
 
-
 # === STYLES ===
 st.markdown(f"""
     <style>
@@ -111,12 +97,6 @@ def load_logo_base64(path):
 
 logo_base64 = load_logo_base64("avix_logo.png")
 
-# ... po výbere jazyka a textov t = translations[lang_choice]
-
-show_pdf_manual()
-
-
-
 # === HEADER & LANGUAGE ===
 col_header, col_lang = st.columns([5, 1])
 with col_header:
@@ -140,32 +120,21 @@ col1, col2 = st.columns([1, 4])
 with col1:
     st.write(t["upload_file"])
 with col2:
-    uploaded_file = st.file_uploader(
-        "Upload Excel file",   # alebo po slovensky: "Nahrať Excel súbor"
-        type=["xlsx", "xls"],
-        label_visibility="collapsed"
-    )
+    uploaded_file = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed")
 
 # === PROCESSING ===
-if file_name.endswith(".xls"):
-    xls = pd.read_excel(
-        io.BytesIO(xls_bytes),
-        sheet_name=None,
-        engine="xlrd",
-        dtype=str
-    )
-else:
-    xls = pd.read_excel(
-        io.BytesIO(xls_bytes),
-        sheet_name=None,
-        engine="openpyxl",
-        dtype=str
-    )
-
-translation_df = xls[list(xls.keys())[0]].fillna("")
-configuration_df = xls[list(xls.keys())[1]].fillna("")
-translation_df = translation_df.astype(str)
-configuration_df = configuration_df.astype(str)
+if uploaded_file:
+    try:
+        xls_bytes = uploaded_file.read()
+        file_name = uploaded_file.name.lower()
+        if file_name.endswith(".xls"):
+            # starý Excel formát – potrebuješ mať nainštalované `xlrd`
+            xls = pd.read_excel(io.BytesIO(xls_bytes), sheet_name=None, engine="xlrd")
+        else:
+            # .xlsx – ako doteraz
+            xls = pd.read_excel(io.BytesIO(xls_bytes), sheet_name=None, engine="openpyxl")
+        translation_df = xls[list(xls.keys())[0]]
+        configuration_df = xls[list(xls.keys())[1]]
 
         with st.expander(t["preview_translation"], expanded=True):
             st.dataframe(translation_df.head())
@@ -210,7 +179,7 @@ configuration_df = configuration_df.astype(str)
         with col_btn:
             if st.button(t["translate_button"]):
                 start_time = time.time()
-                translation_df_copy = translation_df.copy().astype(str).fillna("")
+                translation_df_copy = translation_df.copy()
                 total_rows = len(translation_df)
                 progress_bar = st.progress(0)
                 cell_styles = {}
@@ -236,29 +205,9 @@ configuration_df = configuration_df.astype(str)
 
                 st.success(t["success_translation"].format(seconds=time.time() - start_time))
 
-                # === AUTOMATIC TRANSLATION NOTICE ===
-                notice_texts = {
-                    "sk": (
-                        "Tento preklad je generovaný automaticky. Môže obsahovať nepresnosti, "
-                        "preto odporúčame dôkladnú kontrolu pred finálnym nasadením."
-                    ),
-                    "en": (
-                        "This translation is generated automatically. It may contain inaccuracies, "
-                        "so we recommend carefully reviewing it before final use."
-                    ),
-                    "de": (
-                        "Diese Übersetzung wird automatisch erstellt. Sie kann Ungenauigkeiten enthalten, "
-                        "daher empfehlen wir eine sorgfältige Prüfung vor dem endgültigen Einsatz."
-                    ),
-                }
-
-                # jazyk podľa prepínača v hlavičke (sk/en/de)
-                selected_lang = lang_choice
-                st.info(notice_texts.get(selected_lang, notice_texts["en"]))
-
                 with st.expander(t["preview_result"], expanded=True):
                     st.dataframe(translation_df_copy.head())
-               
+
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                     translation_df_copy.to_excel(writer, sheet_name='Translations', index=False)
@@ -272,7 +221,6 @@ configuration_df = configuration_df.astype(str)
 
                 # Nastav Arial 10 pre všetky bunky v preklade
                 default_font = Font(name="Arial", size=10)
-
 
                 for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
                     for cell in row:
@@ -308,14 +256,3 @@ configuration_df = configuration_df.astype(str)
                 )
     except Exception as e:
         st.error(f"Chyba pri spracovaní súboru: {e}")
-
-
-
-
-
-
-
-
-
-
-
