@@ -54,23 +54,6 @@ translations = {
     }
 }
 
-PDF_PATH = Path("Instructions.pdf")  # názov súboru prispôsob svojmu
-
-def show_pdf_manual():
-    if not PDF_PATH.exists():
-        st.warning("PDF manuál zatiaľ nie je nahratý v repozitári.")
-        return
-
-    with open(PDF_PATH, "rb") as f:
-        pdf_bytes = f.read()
-
-    st.download_button(
-        label="📘 Open instructions",
-        data=pdf_bytes,
-        file_name=PDF_PATH.name,
-        mime="application/pdf",
-    )
-
 # === STYLES ===
 st.markdown(f"""
     <style>
