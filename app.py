@@ -148,18 +148,25 @@ with col2:
     )
 
 # === PROCESSING ===
-if uploaded_file:
-    try:
-        xls_bytes = uploaded_file.read()
-        file_name = uploaded_file.name.lower()
-        if file_name.endswith(".xls"):
-            # starý Excel formát – potrebuješ mať nainštalované `xlrd`
-            xls = pd.read_excel(io.BytesIO(xls_bytes), sheet_name=None, engine="xlrd")
-        else:
-            # .xlsx – ako doteraz
-            xls = pd.read_excel(io.BytesIO(xls_bytes), sheet_name=None, engine="openpyxl")
-        translation_df = xls[list(xls.keys())[0]]
-        configuration_df = xls[list(xls.keys())[1]]
+if file_name.endswith(".xls"):
+    xls = pd.read_excel(
+        io.BytesIO(xls_bytes),
+        sheet_name=None,
+        engine="xlrd",
+        dtype=str
+    )
+else:
+    xls = pd.read_excel(
+        io.BytesIO(xls_bytes),
+        sheet_name=None,
+        engine="openpyxl",
+        dtype=str
+    )
+
+translation_df = xls[list(xls.keys())[0]].fillna("")
+configuration_df = xls[list(xls.keys())[1]].fillna("")
+translation_df = translation_df.astype(str)
+configuration_df = configuration_df.astype(str)
 
         with st.expander(t["preview_translation"], expanded=True):
             st.dataframe(translation_df.head())
@@ -204,7 +211,7 @@ if uploaded_file:
         with col_btn:
             if st.button(t["translate_button"]):
                 start_time = time.time()
-                translation_df_copy = translation_df.copy()
+                translation_df_copy = translation_df.copy().astype(str).fillna("")
                 total_rows = len(translation_df)
                 progress_bar = st.progress(0)
                 cell_styles = {}
