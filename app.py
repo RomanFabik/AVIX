@@ -54,7 +54,6 @@ translations = {
     }
 }
 
-
 PDF_PATH = Path("Instructions.pdf")  # názov súboru prispôsob svojmu
 
 def show_pdf_manual():
