@@ -8,6 +8,13 @@ from openpyxl.styles import Font
 import base64
 import re
 
+LANG_MAP = {
+    "in": "id",     # Indonesian
+    "iw": "he",     # Hebrew
+    "fil": "tl",    # Filipino
+    "zh": "zh-CN",  # Chinese
+}
+
 # === AVIX SETTINGS ===
 PRIMARY_GREEN = "#275437"
 DARK_BACKGROUND = "#232323"
@@ -203,7 +210,14 @@ if uploaded_file:
                             translation_df_copy[matching_col] = pd.Series([""] * len(translation_df_copy), dtype="object")
 
                         try:
-                            translated_text = GoogleTranslator(source=source_lang, target=lang).translate(original_text)
+                            target_lang = LANG_MAP.get(lang, lang)
+
+                        try:
+                            translated_text = GoogleTranslator(source=source_lang, target=target_lang).translate(original_text)
+                        except Exception:
+                            translated_text = GoogleTranslator(source=source_lang, target="en").translate(original_text)
+                            translated_text = f"[FALLBACK EN] {translated_text}"
+                            
                             if translated_text is None:
                                 translated_text = ""
                             translated_text = str(translated_text)
