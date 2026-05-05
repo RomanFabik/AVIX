@@ -102,7 +102,11 @@ col1, col2 = st.columns([1, 4])
 with col1:
     st.write(t["upload_file"])
 with col2:
-    uploaded_file = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader(
+    "Nahraj Excel súbor",
+    type=["xlsx", "xls"],
+    label_visibility="collapsed"
+)
 
 # === PROCESSING ===
 if uploaded_file:
@@ -162,13 +166,19 @@ if uploaded_file:
             if st.button(t["translate_button"]):
                 start_time = time.time()
                 translation_df_copy = translation_df.copy()
+                # Cieľové jazykové stĺpce musia byť textové, nie float64
+                for col in translation_df_copy.columns:
+                    if re.match(r".*\([\w-]{2,10}\)", str(col)):
+                        translation_df_copy[col] = translation_df_copy[col].astype("object")
                 total_rows = len(translation_df)
                 progress_bar = st.progress(0)
                 cell_styles = {}
                 suspicious_words = ['poloz', 'rama', 'skrutky', 'ulozenie']
 
                 for idx, row in translation_df.iterrows():
-                    original_text = str(row[text_column]) if pd.notna(row[text_column]) else ""
+                    original_text = str(row[text_column]).strip() if pd.notna(row[text_column]) else ""
+                    if not original_text:
+                        continue
                     for lang in target_langs:
                         matching_col = next((col for col in translation_df.columns if col.lower().endswith(f"({lang})")), None)
                         if not matching_col:
