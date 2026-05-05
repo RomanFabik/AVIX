@@ -8,19 +8,61 @@ from openpyxl.styles import Font
 import base64
 import re
 
-LANG_MAP = {
-    "in": "id",     # Indonesian
-    "iw": "he",     # Hebrew
-    "fil": "tl",    # Filipino
-    "zh": "zh-CN",  # Chinese
-}
-
 # === AVIX SETTINGS ===
 PRIMARY_GREEN = "#275437"
 DARK_BACKGROUND = "#232323"
 LIGHT_TEXT = "#EEEEEE"
 WHITE = "#FFFFFF"
 FONT_URL = "https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
+
+# === LANGUAGE CODE MAP ===
+# AVIX / older Google codes -> deep-translator supported codes
+LANG_MAP = {
+    "in": "id",      # Indonesian
+    "iw": "he",      # Hebrew
+    "fil": "tl",     # Filipino / Tagalog
+    "zh": "zh-CN",   # Chinese Simplified
+}
+
+def normalize_lang_code(code):
+    code = str(code).strip()
+    return LANG_MAP.get(code, code)
+
+def translate_batch_safe(texts, source_lang, target_lang, chunk_size=50):
+    """Translate a list of texts in chunks. If target language fails, fallback to English."""
+    source_lang = normalize_lang_code(source_lang)
+    target_lang = normalize_lang_code(target_lang)
+
+    result = ["" for _ in texts]
+    items = [(i, str(text).strip()) for i, text in enumerate(texts) if str(text).strip()]
+
+    if not items:
+        return result, set()
+
+    fallback_indices = set()
+
+    for start in range(0, len(items), chunk_size):
+        chunk = items[start:start + chunk_size]
+        idxs = [i for i, _ in chunk]
+        chunk_texts = [text for _, text in chunk]
+
+        try:
+            translated = GoogleTranslator(source=source_lang, target=target_lang).translate_batch(chunk_texts)
+            if translated is None:
+                translated = ["" for _ in chunk_texts]
+        except Exception:
+            try:
+                translated = GoogleTranslator(source=source_lang, target="en").translate_batch(chunk_texts)
+                translated = [f"[FALLBACK EN] {t}" if t else "" for t in translated]
+                fallback_indices.update(idxs)
+            except Exception as e:
+                translated = [f"[CHYBA] {str(e)}" for _ in chunk_texts]
+                fallback_indices.update(idxs)
+
+        for i, value in zip(idxs, translated):
+            result[i] = "" if value is None else str(value)
+
+    return result, fallback_indices
 
 st.set_page_config(page_title="AVIX AI Translation", page_icon=":earth_africa:", layout="wide")
 
@@ -87,15 +129,6 @@ def load_logo_base64(path):
 logo_base64 = load_logo_base64("avix_logo.png")
 
 # === HEADER & LANGUAGE ===
-with open("Instructions.pdf", "rb") as pdf_file:
-    PDFbyte = pdf_file.read()
-
-st.download_button(
-    label="📄 Návod k aplikácii",
-    data=PDFbyte,
-    file_name="Instructions.pdf",
-    mime="application/pdf"
-)
 col_header, col_lang = st.columns([5, 1])
 with col_header:
     st.markdown(f"""
@@ -197,39 +230,35 @@ if uploaded_file:
                     else:
                         translation_df_copy[matching_col] = translation_df_copy[matching_col].astype("object")
 
-                for idx, row in translation_df.iterrows():
-                    original_text = str(row[text_column]).strip() if pd.notna(row[text_column]) else ""
-                    if not original_text:
-                        progress_bar.progress((idx + 1) / total_rows)
-                        continue
+                source_texts = translation_df[text_column].fillna("").astype(str).str.strip().tolist()
+                total_jobs = max(1, len(target_langs))
 
-                    for lang in target_langs:
-                        matching_col = next((col for col in translation_df_copy.columns if str(col).lower().endswith(f"({lang})")), None)
-                        if not matching_col:
-                            matching_col = f"Translation ({lang})"
-                            translation_df_copy[matching_col] = pd.Series([""] * len(translation_df_copy), dtype="object")
+                for lang_i, lang in enumerate(target_langs, start=1):
+                    matching_col = next((col for col in translation_df_copy.columns if str(col).lower().endswith(f"({lang})")), None)
+                    if not matching_col:
+                        matching_col = f"Translation ({lang})"
+                        translation_df_copy[matching_col] = pd.Series([""] * len(translation_df_copy), dtype="object")
 
-                        
-                        target_lang = LANG_MAP.get(lang, lang)
-                        try:
-                            translated_text = GoogleTranslator(source=source_lang, target=target_lang).translate(original_text)
-                        except Exception:
-                            translated_text = GoogleTranslator(source=source_lang, target="en").translate(original_text)
-                            translated_text = f"[FALLBACK EN] {translated_text}"
-                            
-                            if translated_text is None:
-                                translated_text = ""
-                            translated_text = str(translated_text)
-                        except Exception as e:
-                            translated_text = f"[CHYBA] {str(e)}"
-                            cell_styles[(idx, matching_col)] = "highlight"
+                    translated_values, fallback_indices = translate_batch_safe(
+                        source_texts,
+                        source_lang=source_lang,
+                        target_lang=lang,
+                        chunk_size=50,
+                    )
 
-                        translation_df_copy.loc[idx, matching_col] = translated_text
+                    translation_df_copy.loc[:, matching_col] = pd.Series(
+                        translated_values,
+                        index=translation_df_copy.index,
+                        dtype="object"
+                    )
 
-                        if translated_text and any(word.lower() in translated_text.lower() for word in suspicious_words):
-                            cell_styles[(idx, matching_col)] = "highlight"
+                    for pos, translated_text in enumerate(translated_values):
+                        if pos in fallback_indices or str(translated_text).startswith("[CHYBA]"):
+                            cell_styles[(translation_df_copy.index[pos], matching_col)] = "highlight"
+                        elif translated_text and any(word.lower() in translated_text.lower() for word in suspicious_words):
+                            cell_styles[(translation_df_copy.index[pos], matching_col)] = "highlight"
 
-                    progress_bar.progress((idx + 1) / total_rows)
+                    progress_bar.progress(lang_i / total_jobs)
 
                 st.success(t["success_translation"].format(seconds=time.time() - start_time))
 
@@ -268,9 +297,11 @@ if uploaded_file:
                     letter = col_cells[0].column_letter
                     ws.column_dimensions[letter].width = 80 if letter != "A" else 1
 
+                index_to_excel_row = {idx_value: pos + 2 for pos, idx_value in enumerate(translation_df_copy.index)}
                 for (row_idx, col_name), _ in cell_styles.items():
                     col_idx = list(translation_df_copy.columns).index(col_name) + 1
-                    ws.cell(row=row_idx + 2, column=col_idx).font = Font(color="FF0000", bold=True)
+                    excel_row = index_to_excel_row.get(row_idx, row_idx + 2 if isinstance(row_idx, int) else 2)
+                    ws.cell(row=excel_row, column=col_idx).font = Font(color="FF0000", bold=True)
 
                 final_output = io.BytesIO()
                 wb.save(final_output)
