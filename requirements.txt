@@ -1,6 +1,5 @@
 streamlit
-deep-translator
+pandas
 openpyxl
-xlrd
-pandas==2.2.3
-numpy<2.0
+deep-translator
+xlrd==1.2.0
