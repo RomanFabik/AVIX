@@ -209,9 +209,8 @@ if uploaded_file:
                             matching_col = f"Translation ({lang})"
                             translation_df_copy[matching_col] = pd.Series([""] * len(translation_df_copy), dtype="object")
 
-                        try:
-                            target_lang = LANG_MAP.get(lang, lang)
-
+                        
+                        target_lang = LANG_MAP.get(lang, lang)
                         try:
                             translated_text = GoogleTranslator(source=source_lang, target=target_lang).translate(original_text)
                         except Exception:
