@@ -129,6 +129,15 @@ def load_logo_base64(path):
 logo_base64 = load_logo_base64("avix_logo.png")
 
 # === HEADER & LANGUAGE ===
+with open("Instructions.pdf", "rb") as pdf_file:
+    PDFbyte = pdf_file.read()
+
+st.download_button(
+    label="📄 Návod k aplikácii",
+    data=PDFbyte,
+    file_name="Instructions.pdf",
+    mime="application/pdf"
+)
 col_header, col_lang = st.columns([5, 1])
 with col_header:
     st.markdown(f"""
