@@ -8,6 +8,27 @@ from openpyxl.styles import Font
 import base64
 import re
 
+
+st.markdown("""
+<style>
+/* horný panel */
+header {visibility: hidden;}
+
+/* footer */
+footer {visibility: hidden;}
+
+/* toolbar (⋮ menu, edit, github) */
+[data-testid="stToolbar"] {display: none !important;}
+
+/* spodný branding (ten čo si označil) */
+[data-testid="stDecoration"] {display: none !important;}
+
+/* niekedy treba aj toto (backup selektor) */
+.css-1rs6os {display: none !important;}
+</style>
+""", unsafe_allow_html=True)
+
+
 # === AVIX SETTINGS ===
 PRIMARY_GREEN = "#275437"
 DARK_BACKGROUND = "#232323"
