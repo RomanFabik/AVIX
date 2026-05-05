@@ -146,7 +146,7 @@ with col_header:
                 <img src="data:image/png;base64,{logo_base64}" height="50">
                 <h1>AVIX AI Translation</h1>
             </div>
-            <a href="https://www.avix.eu" style="color:{PRIMARY_GREEN};font-weight:bold;">www.avix.eu</a>
+            <a href="https://www.avixsuite.com" style="color:{PRIMARY_GREEN};font-weight:bold;">www.avixsuite.com</a>
         </div>
     """, unsafe_allow_html=True)
 
