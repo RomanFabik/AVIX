@@ -146,7 +146,7 @@ if uploaded_file:
         with c2:
             source_lang = st.text_input(t["source_language"], auto_source_lang)
         with c3:
-            lang_col_pattern = re.compile(r".*\((\w{2})\)")
+            lang_col_pattern = re.compile(r".*\(([\w-]{2,10})\)")
             existing_target_langs = []
             
             for col in translation_df.columns:
