@@ -102,7 +102,7 @@ col1, col2 = st.columns([1, 4])
 with col1:
     st.write(t["upload_file"])
 with col2:
-    uploaded_file = st.file_uploader("Nahraj Excel súbor", type=["xlsx", "xls"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("", type=["xlsx", "xls"], label_visibility="collapsed")
 
 # === PROCESSING ===
 if uploaded_file:
@@ -161,59 +161,29 @@ if uploaded_file:
         with col_btn:
             if st.button(t["translate_button"]):
                 start_time = time.time()
-                # Dôležité pre Streamlit Cloud / Pandas 3.x:
-                # prázdne jazykové stĺpce sa načítajú ako float64 a do nich sa nedá zapísať text.
-                translation_df_copy = translation_df.copy().astype("object")
-
-                # Normalizuj prázdne hodnoty v celej tabuľke na prázdny text.
-                translation_df_copy = translation_df_copy.where(pd.notna(translation_df_copy), "")
-
-                total_rows = len(translation_df_copy)
+                translation_df_copy = translation_df.copy()
+                total_rows = len(translation_df)
                 progress_bar = st.progress(0)
                 cell_styles = {}
                 suspicious_words = ['poloz', 'rama', 'skrutky', 'ulozenie']
 
-                # Priprav translator objekty iba raz, nie pri každej bunke.
-                translators = {
-                    lang: GoogleTranslator(source=source_lang.strip().lower(), target=lang.strip().lower())
-                    for lang in target_langs
-                }
-
-                for pos, idx in enumerate(translation_df_copy.index):
-                    original_value = translation_df_copy.at[idx, text_column]
-                    original_text = str(original_value).strip() if pd.notna(original_value) else ""
-
-                    if not original_text:
-                        progress_bar.progress((pos + 1) / total_rows)
-                        continue
-
+                for idx, row in translation_df.iterrows():
+                    original_text = str(row[text_column]) if pd.notna(row[text_column]) else ""
                     for lang in target_langs:
-                        matching_col = next(
-                            (col for col in translation_df_copy.columns if str(col).lower().endswith(f"({lang.lower()})")),
-                            None
-                        )
-
+                        matching_col = next((col for col in translation_df.columns if col.lower().endswith(f"({lang})")), None)
                         if not matching_col:
                             matching_col = f"Translation ({lang})"
-                            translation_df_copy[matching_col] = pd.Series([""] * len(translation_df_copy), dtype="object")
-
-                        # Poistka: každý cieľový stĺpec musí byť object/string stĺpec.
-                        translation_df_copy[matching_col] = translation_df_copy[matching_col].astype("object")
+                            translation_df_copy[matching_col] = ""
 
                         try:
-                            translated_text = translators[lang].translate(original_text)
-                            if translated_text is None:
-                                translated_text = ""
-
-                            translation_df_copy.loc[idx, matching_col] = str(translated_text)
-
-                            if any(word.lower() in str(translated_text).lower() for word in suspicious_words):
+                            translated_text = GoogleTranslator(source=source_lang, target=lang).translate(original_text)
+                            translation_df_copy.at[idx, matching_col] = translated_text
+                            if any(word.lower() in translated_text.lower() for word in suspicious_words):
                                 cell_styles[(idx, matching_col)] = "highlight"
                         except Exception as e:
-                            translation_df_copy.loc[idx, matching_col] = f"[CHYBA] {str(e)}"
+                            translation_df_copy.at[idx, matching_col] = f"[CHYBA] {str(e)}"
                             cell_styles[(idx, matching_col)] = "highlight"
-
-                    progress_bar.progress((pos + 1) / total_rows)
+                    progress_bar.progress((idx + 1) / total_rows)
 
                 st.success(t["success_translation"].format(seconds=time.time() - start_time))
 
