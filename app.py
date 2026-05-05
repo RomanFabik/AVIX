@@ -183,10 +183,13 @@ if uploaded_file:
                         matching_col = next((col for col in translation_df.columns if col.lower().endswith(f"({lang})")), None)
                         if not matching_col:
                             matching_col = f"Translation ({lang})"
-                            translation_df_copy[matching_col] = ""
+                            translation_df_copy[matching_col] = pd.Series([""] * len(translation_df_copy), dtype="object")
+                        else:
+                            translation_df_copy[matching_col] = translation_df_copy[matching_col].astype("object")
 
                         try:
                             translated_text = GoogleTranslator(source=source_lang, target=lang).translate(original_text)
+                            translation_df_copy[matching_col] = translation_df_copy[matching_col].astype("object")
                             translation_df_copy.at[idx, matching_col] = translated_text
                             if any(word.lower() in translated_text.lower() for word in suspicious_words):
                                 cell_styles[(idx, matching_col)] = "highlight"
