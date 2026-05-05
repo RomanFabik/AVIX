@@ -80,21 +80,12 @@ def load_logo_base64(path):
 logo_base64 = load_logo_base64("avix_logo.png")
 
 # === HEADER & LANGUAGE ===
-st.markdown("### 📄 Návod k aplikácii")
-
-with open("Instructions.pdf", "rb") as f:
-    base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-
-pdf_display = f"""
-<iframe src="data:application/pdf;base64,{base64_pdf}" 
-width="100%" height="600px" type="application/pdf"></iframe>
-"""
-
-st.markdown(pdf_display, unsafe_allow_html=True)
+with open("Instructions.pdf", "rb") as pdf_file:
+    PDFbyte = pdf_file.read()
 
 st.download_button(
-    label="📥 Stiahnuť PDF návod",
-    data=base64.b64decode(base64_pdf),
+    label="📄 Návod k aplikácii",
+    data=PDFbyte,
     file_name="Instructions.pdf",
     mime="application/pdf"
 )
